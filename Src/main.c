@@ -17,13 +17,92 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include "stm32f446xx.h"
+#include "stm32f446xx_gpio_driver.h"
 
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+#define HIGH 1
+#define LOW 0
+#define BTN_PRESSED LOW
+
+void delay(void)
+{
+	for (uint32_t i=0; i<500000; i++);
+}
+
+void delay_250ms(void)
+{
+    for (volatile uint32_t j = 0; j < 400000; j++);
+}
 
 int main(void)
 {
-    /* Loop forever */
-	for(;;);
+
+	GPIO_Handle_t GpioLed;
+	GPIO_Handle_t extLED1, extLED2;
+
+	//this is led gpio configuration
+ 	GpioLed.pGPIOx = GPIOA;
+	GpioLed.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_5;
+	GpioLed.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	GpioLed.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_LOW;
+	GpioLed.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
+	GpioLed.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+	GPIO_PeriClockControl(GPIOA,ENABLE);
+	GPIO_Init(&GpioLed);
+
+
+	extLED1.pGPIOx=GPIOA;
+	extLED1.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_6;
+	extLED1.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	extLED1.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_LOW;
+	extLED1.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
+	extLED1.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+	GPIO_Init(&extLED1);
+
+	extLED2.pGPIOx=GPIOA;
+	extLED2.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_7;
+	extLED2.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	extLED2.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_LOW;
+	extLED2.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
+	extLED2.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+	GPIO_Init(&extLED2);
+
+
+
+
+	GPIO_Handle_t button;
+	button.pGPIOx = GPIOC;
+	button.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_13;
+	button.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	GPIO_PeriClockControl(GPIOC, ENABLE);
+	GPIO_Init(&button);
+
+
+	while(1)
+	{
+		//============================ program for button press ======================================
+		if (GPIO_ReadFromInputPin(GPIOC, GPIO_PIN_NO_13) == LOW)
+		{
+
+			GPIO_ToggleOutputPin(GPIOA,GPIO_PIN_NO_5);
+			printf("\nButton pressed");
+//			delay();
+
+
+		}
+
+		else
+		{
+			GPIO_WriteToOutputPin(GPIOA, GPIO_PIN_NO_6, HIGH);
+			GPIO_WriteToOutputPin(GPIOA, GPIO_PIN_NO_7, LOW);
+			delay_250ms();
+			GPIO_WriteToOutputPin(GPIOA, GPIO_PIN_NO_6, LOW);
+			GPIO_WriteToOutputPin(GPIOA, GPIO_PIN_NO_7, HIGH);
+			delay_250ms();
+
+
+		}
+	}
+	return 0;
 }
